@@ -38,3 +38,7 @@ else
   `systemctl restart apache2`
   puts "Swiched from #{current_version} to #{version}."
 end
+sleep 0.1
+`sudo a2dismod php#{current_version}`
+`a2enmod php#{version}`
+`systemctl restart apache2`
