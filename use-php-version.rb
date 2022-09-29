@@ -6,8 +6,13 @@ unless [1].include?(ARGV.size)
 end
 
 version = ARGV[0]
-get_current_version = `php -v`
-current_version = get_current_version.match(/[PHP]?\s*\K[\d\.]+/)[0]
+
+begin
+  get_current_version = `php -v`
+  current_version = get_current_version.match(/[PHP]?\s*\K[\d\.]+/)[0]
+rescue Errno::ENOENT
+  current_version = nil
+end
 
 puts "#{current_version} is already in use" if current_version == version
 return if current_version == version
@@ -40,5 +45,15 @@ else
 end
 sleep 0.1
 `sudo a2dismod php#{current_version}`
-`a2enmod php#{version}`
-`systemctl restart apache2`
+
+if current_version&.present?
+  if current_version.split('.').first == '5'
+    `sudo a2dismod php5.0`
+  elsif current_version.split('.').first == '7'
+    `sudo a2dismod php7.0`
+  elsif current_version.split('.').first == '8'
+    `sudo a2dismod php8.0`
+  end
+end
+`sudo a2enmod php#{version}`
+`sudo systemctl restart apache2` # if this returns error try sudo apt-get purge 'php*' and run this again
